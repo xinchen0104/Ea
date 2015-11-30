@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>rainyday.js demo #4</title>
+        <style media="screen">
+            body {
+                overflow: hidden;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+                color: #333;
+            }
+
+            img {
+                width: 100%;
+                height: 100%;
+            }
+
+        </style>
+        <script src="/js/rainyday.js"></script>
+        <script>
+            function run() {
+                var image = document.getElementById('background');
+                var orgimage = document.getElementById('orgbackground');
+		orgimage.onload = function(){
+                    image.src = orgimage.src;
+		}
+                image.onload = function() {
+                    engine = new RainyDay({
+                        image: this,
+                        fps: 100,
+                        blur: 10,
+                        gravityAngle: Math.PI / 9
+                    });
+		    engine.xscale = this.width/orgimage.width;
+		    engine.yscale = this.height/orgimage.height;
+		    engine.orgimage = orgimage;
+                    engine.trail = engine.TRAIL_SMUDGE;
+                    engine.rain([ [1, 0, 1000], [3, 3, 5] ], 100);
+		    var lastTimeStamp = new Date();
+		    var space = 200;
+		    var probability = 1;
+		    var MOUSE_DOWN = false;
+		    var dragged = null;
+		    engine.canvas.addEventListener('touchstart',function(e){
+			e.preventDefault();
+			MOUSE_DOWN = true;
+			var x = e.touches[0].pageX; 
+			var y = e.touches[0].pageY; 
+			if(dragged == null){
+			    dragged = new Drop(engine,x,y,5,5);
+			    engine.putDrop(dragged);
+			} 
+		    });
+		    engine.canvas.addEventListener('touchmove',function(e){
+			e.preventDefault();
+			if(MOUSE_DOWN){
+			    var x = e.touches[0].pageX; 
+			    var y = e.touches[0].pageY; 
+			    dragged.x = Math.floor(x); 
+			    dragged.y = Math.floor(y); 
+			    for(var index in engine.drops){
+				if(engine.drops[index].x > x-20 && engine.drops[index].x < x+20 &&engine.drops[index].y > y-20 &&engine.drops[index].y < y+20){
+				    engine.clearDrop(engine.drops[index],true);
+				}
+			    }
+			    engine.context.clearRect(x-20,y-20,40,40);
+			    var now = new Date();
+			    if(now - lastTimeStamp > space&&Math.random()<probability){
+				engine.putDrop(new Drop(engine,x,y,1,5));
+				lastTimeStamp = now;
+			    }
+			    engine.background.getContext("2d").drawImage(engine.orgimage,(x-10)/engine.xscale,(y-10)/engine.yscale,20/engine.xscale,20/engine.yscale,x-10,y-10,20,20);
+			}
+		    });
+		    engine.canvas.addEventListener('touchend',function(e){
+			e.preventDefault();
+			MOUSE_DOWN = false;
+			dragged = null;
+		    });
+		    
+
+
+		    engine.canvas.addEventListener('mouseup',function(e){
+			e.preventDefault();
+			MOUSE_DOWN = false;
+			//var x = e.pageX; 
+			//var y = e.pageY;
+			dragged = null;
+		    });
+		    engine.canvas.addEventListener('mousedown',function(e){
+			e.preventDefault();
+			MOUSE_DOWN = true;
+			var x = e.pageX; 
+			var y = e.pageY;
+			if(dragged == null){
+			    dragged = new Drop(engine,x,y,5,5);
+			    engine.putDrop(dragged);
+			} 
+		    });
+		    engine.canvas.addEventListener('mousemove',function(e){
+			e.preventDefault();
+			if(MOUSE_DOWN){
+			    var x = e.pageX; 
+			    var y = e.pageY;
+			    dragged.x = Math.floor(x); 
+			    dragged.y = Math.floor(y); 
+			    for(var index in engine.drops){
+				if(engine.drops[index].x > x-20 && engine.drops[index].x < x+20 &&engine.drops[index].y > y-20 &&engine.drops[index].y < y+20){
+				    engine.clearDrop(engine.drops[index],true);
+				}
+			    }
+			    engine.context.clearRect(x-25,y-25,50,50);
+			    var now = new Date();
+			    if(now - lastTimeStamp > space&&Math.random()<probability){
+				engine.putDrop(new Drop(engine,x,y,1,5));
+				lastTimeStamp = now;
+			    }
+			    engine.background.getContext("2d").drawImage(engine.orgimage,(x-10)/engine.xscale,(y-10)/engine.yscale,20/engine.xscale,20/engine.yscale,x-10,y-10,20,20);
+			}
+		    });
+                };
+                image.crossOrigin = 'anonymous';
+                orgimage.src = '/img/smc.jpg';
+
+           }
+        </script>
+    </head>
+    <body onload="run();">
+        <img id="background" alt="background" width="640" height="480" src="" />
+        <img id="orgbackground" alt="background" src="" style="display:none"/>
+    </body>
+</html>
